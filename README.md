@@ -1,19 +1,13 @@
-### opengl_convenience ###
-this is an easy to use opengl class. it can load simple obj files and render them. 
+### graph ###
+this is a simple graph implementation written in c++
 
 ### dependencies ###
-soil, assimp (though not yet implemented), eigen3, glfw3, glew, opencv
+none
 
 ### build and run ###
 ```
 #!bash
-cd path/to/openglconvenience
+cd path/to/graph
 cmake .
 make
-```
-you will need to edit the paths to the shaders and the obj to be loaded. then:
-```
-#!bash
-cd path/to/openglconvenience
-./openglconvenience
 ```
