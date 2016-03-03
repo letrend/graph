@@ -23,27 +23,28 @@ namespace graph {
 	class Graph {
 	public:
 		Graph(uint numberVertices) {
-			vertices.resize(numberVertices);
+			addVertex();
 			Edge edge;
-			edge.from = &vertices[0]; // first vertex points to itself
-			edge.to = &vertices[0];
+			edge.from = vertices[0]; // first vertex points to itself
+			edge.to = vertices[0];
 			totalNrEdges++;
-			vertices[0].edges_in.push_back(edge);
-			vertices[0].index = 0;
-			indexVertex[0] = &vertices[0];
+			vertices[0]->edges_in.push_back(edge);
+			vertices[0]->index = 0;
+			indexVertex[0] = vertices[0];
 			for (uint i = 1; i < numberVertices; i++) {
-				edge.from = &vertices[i - 1];
-				edge.to = &vertices[i];
+				addVertex();
+				edge.from = vertices[i - 1];
+				edge.to = vertices[i];
 				totalNrEdges++;
-				vertices[i - 1].edges_out.push_back(edge);
-				vertices[i].edges_in.push_back(edge);
-				indexVertex[i] = &vertices[i];
-				vertices[i].index = i;
+				vertices[i - 1]->edges_out.push_back(edge);
+				vertices[i]->edges_in.push_back(edge);
+				indexVertex[i] = vertices[i];
+				vertices[i]->index = i;
 			}
-			edge.from = &vertices.back(); // last vertex points to itself
-			edge.to = &vertices.back();
+			edge.from = vertices.back(); // last vertex points to itself
+			edge.to = vertices.back();
 			totalNrEdges++;
-			vertices.back().edges_out.push_back(edge);
+			vertices.back()->edges_out.push_back(edge);
 		}
 
 		void siblings(uint from) {
@@ -83,6 +84,13 @@ namespace graph {
 			} else {
 				cout << "ERROR: vertex " << from << " or " << to << " does not exist in graph" << endl;
 			}
+		}
+
+		void addVertex(){
+			Vertex *v = new Vertex;
+			v->index = vertices.size();
+			vertices.push_back(v);
+			indexVertex[v->index] = vertices[v->index];
 		}
 
 		void removeEdge(uint from, uint to) {
@@ -140,13 +148,63 @@ namespace graph {
 				// erase vertex
 				indexVertex.erase(it);
 				for (auto it = vertices.begin(); it != vertices.end(); ++it) {
-					if (it->index == v) {
+					if ((*it)->index == v) {
 						// clear the data
+						delete (*it);
+						vertices.erase(it);
 						return;
 					}
 				}
 			} else {
 				cout << "ERROR: vertex " << v << " does not exist in graph" << endl;
+			}
+		}
+
+		void mergeVertices(uint v, uint w){
+			if (indexVertex.find(v) != indexVertex.end() && indexVertex.find(w) != indexVertex.end()) {
+				Vertex *v0 = indexVertex.at(v), *v1 = indexVertex.at(w);
+				// adjust indices of vertex w
+				for (auto edge:v1->edges_in) {
+					if(edge.from!=v0) {
+						edge.to = v0;
+						for(auto it = edge.from->edges_out.begin(); it!=edge.from->edges_out.end(); ++it){
+							if(it->to == v1) {
+								it->to = v0;
+								break;
+							}
+						}
+					}else{
+						removeEdge(edge.from->index,v1->index);
+					}
+				}
+				for (auto edge:v1->edges_out) {
+					if(edge.to!=v0 && edge.to!=v1)
+						edge.from = v0;
+					else
+						removeEdge(v1->index,v1->index);
+				}
+				// merge edges_in and edges_out
+				v0->edges_in.insert( v0->edges_in.end(), v1->edges_in.begin(), v1->edges_in.end() );
+				v0->edges_out.insert( v0->edges_out.end(), v1->edges_out.begin(), v1->edges_out.end() );
+				if(v0->edges_out.empty()) { // terminate vertex
+					Edge edge;
+					edge.from = v0;
+					edge.to = v0;
+					v0->edges_out.push_back(edge);
+				}
+				// erase vertex w
+				auto it = indexVertex.find(w);
+				indexVertex.erase(it);
+				for (auto it = vertices.begin(); it != vertices.end(); ++it) {
+					if ((*it)->index == w) {
+						// clear the data
+						delete (*it);
+						vertices.erase(it);
+						return;
+					}
+				}
+			} else {
+				cout << "ERROR: vertex " << v << " or " << w << " does not exist in graph" << endl;
 			}
 		}
 
@@ -161,7 +219,7 @@ namespace graph {
 
 	private:
 		map<uint, Vertex *> indexVertex;
-		vector<Vertex> vertices;
+		vector<Vertex*> vertices;
 		uint totalNrEdges = 0;
 	};
 }

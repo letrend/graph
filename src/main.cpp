@@ -24,6 +24,17 @@ int main( void )
 	std::cout << "remove vertex 5" << std::endl;
 	graph.removeVertex(5);
 	graph.traverse(v);
-    
+
+	std::cout << "new graph" << std::endl;
+	Graph graph2(5);
+	graph2.addEdge(0,2);
+	graph2.addEdge(0,4);
+
+	v = graph2[0];
+	graph2.traverse(v);
+	std::cout << "merge vertex 1 and 2" << std::endl;
+	graph2.mergeVertices(1,2);
+	graph2.traverse(v);
+
     return 0;
 }
