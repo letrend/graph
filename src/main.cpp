@@ -1,5 +1,7 @@
 #include "graph.hpp"
 
+using namespace graph;
+
 int main( void )
 {
 	cout << "construct graph" << endl;
