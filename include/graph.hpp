@@ -117,30 +117,32 @@ namespace graph {
 		void mergeVertices(uint v, uint w){
 			if (indexVertex.find(v) != indexVertex.end() && indexVertex.find(w) != indexVertex.end()) {
 				Vertex *v0 = indexVertex.at(v), *v1 = indexVertex.at(w);
-				// delete all edges between v0 and v1
+				// delete all edges in v0 to v1
 				vector<Edge> edges2delete;
 				for (auto edge:v0->edges) {
 					if(edge.to==v1) {
 						edges2delete.push_back(edge);
 					}
 				}
+				vector<Edge>::iterator edge2delete;
 				for(auto edge:edges2delete){
-					vector<Edge>::iterator edge2delete;
-					if (checkIfEdgeExists(v0->edges, edge, edge2delete))
+					if(checkIfEdgeExists(v0->edges,edge,edge2delete))
 						v0->edges.erase(edge2delete);
 				}
-				// copy all edges_out to v0
+				// delete all edges in v1 pointing to v1
+				edges2delete.clear();
 				for (auto edge:v1->edges) {
-					if(edge.to!=v0) {
-						v0->edges.push_back(edge);
+					if(edge.to==v1) {
+						edges2delete.push_back(edge);
 					}
 				}
-				// if it is the last vertex terminate it
-				if(v0->edges.empty()) {
-					Edge edge;
-					edge.to = v0;
-					v0->edges.push_back(edge);
+				edge2delete;
+				for(auto edge:edges2delete){
+					if(checkIfEdgeExists(v1->edges,edge,edge2delete))
+						v1->edges.erase(edge2delete);
 				}
+				// copy the remaining edges to v0
+				v0->edges.insert(v0->edges.end(),v1->edges.begin(),v1->edges.end());
 				// erase vertex w
 				auto it = indexVertex.find(w);
 				indexVertex.erase(it);
@@ -163,6 +165,7 @@ namespace graph {
 				return indexVertex[i];
 			} else {
 				cout << "ERROR: vertex " << i << " does not exist in graph" << endl;
+				return nullptr;
 			}
 		}
 
