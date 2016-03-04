@@ -117,10 +117,10 @@ namespace graph {
 		void mergeVertices(uint v, uint w){
 			if (indexVertex.find(v) != indexVertex.end() && indexVertex.find(w) != indexVertex.end()) {
 				Vertex *v0 = indexVertex.at(v), *v1 = indexVertex.at(w);
-				// delete all edges in v0 to v1
+				// delete all edges in v0 to v1 or itself
 				vector<Edge> edges2delete;
 				for (auto edge:v0->edges) {
-					if(edge.to==v1) {
+					if(edge.to==v1 || edge.to==v0) {
 						edges2delete.push_back(edge);
 					}
 				}
@@ -129,10 +129,10 @@ namespace graph {
 					if(checkIfEdgeExists(v0->edges,edge,edge2delete))
 						v0->edges.erase(edge2delete);
 				}
-				// delete all edges in v1 pointing to v1
+				// delete all edges in v1 to v1 or v0
 				edges2delete.clear();
 				for (auto edge:v1->edges) {
-					if(edge.to==v1) {
+					if(edge.to==v1 || edge.to==v0) {
 						edges2delete.push_back(edge);
 					}
 				}
