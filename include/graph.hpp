@@ -73,6 +73,16 @@ namespace graph {
 			}
 		}
 
+		template<typename F>
+		void traverse(Vertex *from, F f) {
+			if (from == from->edges_out[0].to)
+				return;
+			for (auto edge:from->edges_out) {
+				f(from);
+				traverse(edge.to,f);
+			}
+		}
+
 		void addEdge(uint from, uint to) {
 			if (indexVertex.find(from) != indexVertex.end() && indexVertex.find(to) != indexVertex.end()) {
 				Vertex *v0 = indexVertex[from], *v1 = indexVertex[to];
