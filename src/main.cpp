@@ -26,15 +26,25 @@ int main( void )
 	graph.traverse(v);
 
 	std::cout << "new graph" << std::endl;
-	Graph graph2(5);
-	graph2.addEdge(0,2);
-	graph2.addEdge(0,4);
+	Graph graph2(10);
+	graph2.addEdge(0,9);
+	graph2.addEdge(1,9);
+	graph2.addEdge(2,9);
+	graph2.addEdge(3,9);
+	graph2.addEdge(4,9);
+	graph2.addEdge(5,9);
+	graph2.addEdge(6,9);
+	graph2.addEdge(7,9);
 
 	v = graph2[0];
 	graph2.traverse(v);
 	std::cout << "merge vertex 1 and 2" << std::endl;
+	graph2.graphviz();
 	graph2.mergeVertices(1,2);
 	graph2.traverse(v);
+	graph2.graphviz();
+
+
 
     return 0;
 }

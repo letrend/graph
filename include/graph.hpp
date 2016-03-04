@@ -2,6 +2,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <sstream>
 
 using std::map;
 using std::vector;
@@ -163,30 +164,40 @@ namespace graph {
 		void mergeVertices(uint v, uint w){
 			if (indexVertex.find(v) != indexVertex.end() && indexVertex.find(w) != indexVertex.end()) {
 				Vertex *v0 = indexVertex.at(v), *v1 = indexVertex.at(w);
-				// adjust indices of vertex w
-				for (auto edge:v1->edges_in) {
-					if(edge.from!=v0) {
-						edge.to = v0;
-						for(auto it = edge.from->edges_out.begin(); it!=edge.from->edges_out.end(); ++it){
-							if(it->to == v1) {
-								it->to = v0;
-								break;
-							}
-						}
-					}else{
-						removeEdge(edge.from->index,v1->index);
+				// delete all edges between v0 and v1
+				vector<Edge> edges2delete;
+				for (auto edge:v0->edges_out) {
+					if(edge.to==v1) {
+						edges2delete.push_back(edge);
 					}
 				}
-				for (auto edge:v1->edges_out) {
-					if(edge.to!=v0 && edge.to!=v1)
-						edge.from = v0;
-					else
-						removeEdge(v1->index,v1->index);
+				for(auto edge:edges2delete){
+					vector<Edge>::iterator edge2delete;
+					if (checkIfEdgeExists(v0->edges_out, edge, edge2delete))
+						v0->edges_out.erase(edge2delete);
 				}
-				// merge edges_in and edges_out
-				v0->edges_in.insert( v0->edges_in.end(), v1->edges_in.begin(), v1->edges_in.end() );
-				v0->edges_out.insert( v0->edges_out.end(), v1->edges_out.begin(), v1->edges_out.end() );
-				if(v0->edges_out.empty()) { // terminate vertex
+
+				for (auto edge:v1->edges_in) {
+					// adjust all parent nodes to be connected to v0
+					for (uint i=0;i<edge.from->edges_out.size();i++) {
+						if(edge.from->edges_out[i].to == v1)
+							edge.from->edges_out[i].to = v0;
+					}
+					// copy all edges_in to v0
+					if(edge.from!=v0) {
+						edge.to = v0;
+						v0->edges_in.push_back(edge);
+					}
+				}
+				// copy all edges_out to v0
+				for (auto edge:v1->edges_out) {
+					if(edge.to!=v0) {
+						edge.from = v0;
+						v0->edges_out.push_back(edge);
+					}
+				}
+				// if it is the last vertex terminate it
+				if(v0->edges_out.empty()) {
 					Edge edge;
 					edge.from = v0;
 					edge.to = v0;
@@ -215,6 +226,21 @@ namespace graph {
 			} else {
 				cout << "ERROR: vertex " << i << " does not exist in graph" << endl;
 			}
+		}
+
+		void graphviz(const char* file = "graph.png"){
+			std::stringstream str;
+			str << "Graph g{\n";
+			for(auto it:vertices){
+				str << it->index << ";\n";
+				for(auto edge:it->edges_out){
+					str << edge.from->index << "--" << edge.to->index << ";\n";
+				}
+			}
+			str << "}" << endl;
+			char cmd[2000];
+			sprintf(cmd,"echo \"%s\"|dot -Tpng -o%s", str.str().c_str(), file);
+			system(cmd);
 		}
 
 	private:
