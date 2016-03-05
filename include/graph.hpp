@@ -16,6 +16,7 @@ namespace graph {
 	struct Vertex {
 		uint index;
 		vector<Edge> edges;
+		vector<Vertex*> parents;
 	};
 	struct Edge {
 		Vertex *to;
@@ -24,15 +25,8 @@ namespace graph {
 	class Graph {
 	public:
 		Graph(uint numberVertices) {
-			addVertex();
-			Edge edge;
-			for (uint i = 0; i < numberVertices-1; i++) {
+			for (uint i = 1; i <= numberVertices; i++) {
 				addVertex();
-				edge.to = vertices[i+1];
-				totalNrEdges++;
-				vertices[i]->edges.push_back(edge);
-				indexVertex[i] = vertices[i];
-				vertices[i]->index = i;
 			}
 		}
 
@@ -49,6 +43,19 @@ namespace graph {
 				cout << endl;
 			} else {
 				cout << "ERROR: vertex " << from << " does not exist in graph" << endl;
+			}
+		}
+
+		void parents(uint of) {
+			if (indexVertex.find(of) != indexVertex.end()) {
+				Vertex *v = indexVertex.at(of);
+				cout << "vertex " << of << " parents: ";
+				for (auto parent:v->parents) {
+					cout << parent->index << " ";
+				}
+				cout << endl;
+			} else {
+				cout << "ERROR: vertex " << of << " does not exist in graph" << endl;
 			}
 		}
 
@@ -78,6 +85,7 @@ namespace graph {
 				edge.to = v1;
 				totalNrEdges++;
 				v0->edges.push_back(edge);
+				v1->parents.push_back(v0);
 			} else {
 				cout << "ERROR: vertex " << from << " or " << to << " does not exist in graph" << endl;
 			}
@@ -99,6 +107,12 @@ namespace graph {
 				edge.to = v1;
 				if (checkIfEdgeExists(v0->edges, edge, edge2delete))
 					v0->edges.erase(edge2delete);
+				for (auto it = v1->parents.begin(); it != v1->parents.end(); ++it) {
+					if((*it)->index == v0->index) {
+						v1->parents.erase(it);
+						return;
+					}
+				}
 			} else {
 				cout << "ERROR: vertex " << from << " or " << to << " does not exist in graph" << endl;
 			}
@@ -129,11 +143,16 @@ namespace graph {
 					if(checkIfEdgeExists(v0->edges,edge,edge2delete))
 						v0->edges.erase(edge2delete);
 				}
-				// delete all edges in v1 to v1 or v0
+				// delete all edges in v1 to v1 or v0 and adjust v0 as parent
 				edges2delete.clear();
 				for (auto edge:v1->edges) {
 					if(edge.to==v1 || edge.to==v0) {
 						edges2delete.push_back(edge);
+					}else{
+						for(auto it = edge.to->parents.begin(); it != edge.to->parents.end(); ++it) {
+							if ((*it) == v1)
+								(*it) = v0;
+						}
 					}
 				}
 				edge2delete;
@@ -143,6 +162,15 @@ namespace graph {
 				}
 				// copy the remaining edges to v0
 				v0->edges.insert(v0->edges.end(),v1->edges.begin(),v1->edges.end());
+				// adjust parent edges to v0
+				for(auto parent:v1->parents){
+					for(auto it = parent->edges.begin(); it != parent->edges.end(); ++it) {
+						if ((*it).to == v1)
+							(*it).to = v0;
+					}
+				}
+				// copy the parents of v1 to v0
+				v0->parents.insert(v0->parents.end(),v1->parents.begin(),v1->parents.end());
 				// erase vertex w
 				auto it = indexVertex.find(w);
 				indexVertex.erase(it);
